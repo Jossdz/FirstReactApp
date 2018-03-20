@@ -46,56 +46,24 @@ Necesitamos una barra, por tanto crearemos una navbar que solo muestre un texto 
 
 ```JavaScript
 import React from 'react';
+import Logo from '../ironhack.png';
 export default () => {
-  return(
-    <div className="Header">
-      <div className="navbar-fixed">
-        <nav className="cyan">
-          <div className="nav-wrapper">
-            &nbsp; <a href="/" className="brand-logo center"> <i className="material-icons">timeline</i>R|N</a>
-          </div>
-        </nav>
-      </div>
+  return (
+    <nav className="navbar is-dark is-fixed-top" aria-label="main navigation">
+    <div className="navbar-brand">
+      <a className="navbar-item" href="/">
+        <img src={Logo} alt="logo" height="28"/>
+        IronNews
+      </a>
     </div>
+</nav>
   )
 }
 ```
 
-### Creamos 2 componentes basados en clases
+### Componentes Contenedores
 
-Necesitamos un par de componentes los cuales nos ayudaran a darle forma a la app, los crearemos dentro de la carpeta `src/containers/` y los llamaremos `Home.js` y `Articles.js`.
-
-un componente basado en clase tiene la siguiente estructura: 
-
-``` JavaScript
-  import React, { Component } from 'react';
-
-  class Home extends Component {
-    render(){
-      return(
-        <h1> Hola desde Home component </h1>
-      )
-    }
-  }
-
-  export default Home;
-```
-
-Eso ya es un componente listo para reaccionar a mucho de lo que nos provee react y su clase Component. De la misma manera creamos el componente Articles dentro de `Articles.js`.
-
-``` JavaScript
-  import React, { Component } from 'react';
-
-  class Articles extends Component {
-    render(){
-      return(
-        <h1> Hola desde Articles component </h1>
-      )
-    }
-  }
-
-  export default Articles;
-```
+Necesitamos un par de componentes los cuales nos ayudaran a darle forma a la app, existen ya estos componentes dentro de la carpeta `src/containers/`, los cuales son `Home.js` y `Articles.js`.
 
 Hasta ahora ya tenemos 2 componentes que contendrán información y uno que solamente muestra una barra de navegación, con esto listo podemos empezar a ponerlos en la vista con rutas.
 
@@ -112,33 +80,19 @@ Necesitamos un nuevo componente que por convención nombramos `Routes` donde har
 import React from 'react';
 import {
   Route,
-  BrowserRouter,
-  } from 'react-router-dom';
-
-/* componentes propios */
-import Articles from './containers/Articles';
-import Home from './containers/Home';
+  BrowserRouter
+} from 'react-router-dom';
+import Home from './Home';
+import Articles from './Articles';
 
 export default function Routes(){
   return(
     <BrowserRouter>
-      <div>
-          { /*
-          Aquí los componentes que corresponden a cada ruta 
-          Importante que la raíz vaya al final de todas.
-          */ }
-          <Route
-            exact
-            path="/"
-            component={ Home }>
-          </Route>
-
-          <Route
-            path="/articles/"
-            component={ Articles }>
-          </Route>
-      </div>
-    </BrowserRouter>
+    <div>
+      <Route exact component={Home} path="/"></Route>
+      <Route component={ Articles } path="/articles/:source_id"></Route>
+    </div>
+  </BrowserRouter>
   )
 }
 ```
@@ -150,46 +104,44 @@ Para integrarlo vamos al archivo `ìndex.js` que es quien se encarga de llevar n
 ``` JavaScript
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Routes from './routes';
-import registerServiceWorker from './registerServiceWorker';
+import './index.css';
 import Header from './components/Header';
+import Routes from './containers/Routes'
+import registerServiceWorker from './registerServiceWorker';
 
-  ReactDOM.render(
+ReactDOM.render(
   <div>
-      { /* Ubicamos primero nuestra barra, la cual debe mostrarse en todo momento y debajo de ella el componente Routes que es quien cambia dependiendo de la ruta. */ }
     <Header/>
+    <br/>
     <Routes/>
   </div>
-  , document.getElementById('root'));
+, document.getElementById('root'));
 registerServiceWorker();
 ```
 
 ### Consumir una Api
 
-Ahora que tenemos listos los componentes y tenemos una SPA en forma, es momento de traer las noticias a la vista principal. En la carpeta `src` hay listo un servicio con dos funciones las cuales obtienen las fuentes y las noticias dentro de las fuentes.
+Ahora que tenemos listos los componentes y tenemos una SPA en forma, es momento de traer las noticias a la vista principal. En la carpeta `src` hay listo un servicio con dos funciones las cuales obtienen las fuentes y las noticias dentro de las fuentes, así como métodos que llaman a la data en cada componente, es cuestión de llevarla a la vista.
 
 Lo que necesitamos es:
 
 * Dentro de nuestro componente declarar una variable dentro de nuestro estado que contenga un arreglo, a la cual le agregamos las fuentes.
 * Importamos a NavLink para dirigir los links a nuestras rutas.
-* Importamos a `api` desde `src/api`.
-* Creamos una función asincrona para obtener los datos desde el método getSources y los guarde en el estado.
 * Ejecutamos la funcion cuando el componente esté listo.
-* utilizamos la información en nuestra vista generando un Navlink que funge como la etiqueta `a` hacia  `/articles/${source.id}`.
+* utilizamos la información en nuestra vista generando un Navlink que sirve como la etiqueta `a` hacia  `/articles/${source.id}`.
 
 
 ``` JavaScript
 import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
-
 import api from '../api';
 
-class Home extends Component {
+export default class Home extends Component{
   constructor(){
+    super();
     this.state = {
-      sources: [],
-    };
-    this.getSources = this.getSources.bind(this);
+      sources: []
+    }
   }
 
   componentDidMount(){
@@ -197,41 +149,33 @@ class Home extends Component {
   }
 
   async getSources(){
-    let response = await api.getSources();
+    const response = await api.getSources();
     this.setState({
       sources: response.sources
-    });
+    })
+    console.log(response.sources)
   }
 
-  render () {
-    return (
-      <div>
+  render(){
+    return(
+      <div className="container">
+      <br/>
+      <br/>
         {
-          this.state.sources.map((source) =>
-          //cada cosa iterable debe tener un key
-          <NavLink to={ `/articles/${source.id}` }>
-            <div className="container">
-              <div className="row" key={source.id}>
-                <div className="col s12 l12">
-                  <div className="card-panel light-blue lighten-4">
-                    <h2> { source.name } </h2>
-                    <span className="black-text">
-                      {source.description}
-                    </span>
-                    <br/>
-                  </div>
-                </div>
-              </div>
+          this.state.sources.map(source => 
+            <div>
+            <NavLink to={`/articles/${source.id}`}>
+              <h1 className="is-size-2" key={source.id}> { source.name }</h1>
+              <small> { source.description }</small>
+            </NavLink>
+              <hr/>
             </div>
-          </NavLink>
           )
         }
       </div>
     )
   }
 }
-
-export default Home;
 ```
 
 ahora ya tenemos una lista de fuentes de noticias, pero utilizamos una variable en la ruta para ir hacia cada fuente, necesitamos decirle al Router que vamos a hacer uso de ella.
@@ -246,23 +190,20 @@ Dentro del componente Articles necesitamos:
 
 * Importar NavLink y nuestra api.
 * Definir en el estado la lista de articulos y el texto de la fuente.
-* Crear una función que traiga las noticias de la fuente seleccionada.
 * Pintar todas las noticias en nuestra vista.
-
 
 ```JavaScript
 import React, { Component } from 'react';
-import { NavLink } from 'react-router-dom'
 import api from '../api';
+import {NavLink} from 'react-router-dom';
 
-class Articles extends Component {
+export default class Articles extends Component{
   constructor(){
-    super();
+    super()
     this.state = {
       articles: [],
-      source: '',
+      source: ''
     }
-    this.getArticles = this.getArticles.bind(this);
   }
 
   componentDidMount(){
@@ -275,42 +216,27 @@ class Articles extends Component {
       articles: response.articles,
       source: response.source
     })
-    console.log(response.articles);
+    console.log(this.props.match.params.source_id)
   }
-
-  render() {
-    return (
-      <div className="Articles container">
+  render(){
+    return(
+      <div>
       <br/>
-        <div className="row">
-          <h1 className="center-align">{this.state.source}</h1>
+      <h1 className="is-size-1">{ this.state.source }</h1>
+      <NavLink to={'/'}>
+        <button className="button is-warning">Back</button>
+      </NavLink>
         {
-          this.state.articles.map((article) =>
-          <div className="col s12 m6">
-            <div className="card">
-              <div className="card-image waves-effect waves-block waves-light">
-                <img className="activator" src={article.urlToImage}/>
-              </div>
-              <div className="card-content">
-                <span className="card-title activator grey-text text-darken-4 truncate">{article.title}<i className="material-icons right">more_vert</i></span>
-                <p><a href={article.url}>See more</a></p>
-              </div>
-              <div className="card-reveal">
-                <span className="card-title grey-text text-darken-4">{article.title}<i className="material-icons right">close</i></span>
-                <p>{article.description}</p>
-              </div>
+          this.state.articles.map(article => 
+            <div key={ article.id }>
+              <h2 className="is-size-2 has-text-info"> { article.title }</h2>
+              <img alt={article.title} src={article.urlToImage} width="200px"/>
+              <small> { article.description } </small> 
             </div>
-
-          </div>
-        )}
-        <NavLink to={'/'}>
-            <button className="btn btn-info col s12">Volver</button>
-          </NavLink>
-        </div>
+          )
+        }
       </div>
-    );
+    )
   }
 }
-
-export default Articles;
 ```
