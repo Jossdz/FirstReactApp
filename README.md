@@ -90,7 +90,7 @@ export default function Routes(){
     <BrowserRouter>
     <div>
       <Route exact component={Home} path="/"></Route>
-      <Route component={ Articles } path="/articles/:source_id"></Route>
+      <Route component={ Articles } path="/articles"></Route>
     </div>
   </BrowserRouter>
   )
